@@ -395,3 +395,136 @@ footer {
 .expenses-list::-webkit-scrollbar-thumb:hover {
     background: var(--primary-hover);
 }
+
+/* Charts Section */
+.charts-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+}
+
+.charts-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.charts-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--background);
+    padding: 0.25rem;
+    border-radius: var(--radius);
+}
+
+.chart-tab {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-radius: calc(var(--radius) - 0.25rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.chart-tab:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+}
+
+.chart-tab.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.charts-container {
+    position: relative;
+    min-height: 400px;
+}
+
+.chart-wrapper {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-wrapper.active {
+    display: block;
+    opacity: 1;
+}
+
+.chart-wrapper h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.chart-wrapper canvas {
+    max-width: 100%;
+    max-height: 400px;
+}
+
+/* No data message for charts */
+.no-chart-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.no-chart-data .icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-chart-data p {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+}
+
+.no-chart-data small {
+    font-size: 0.875rem;
+    opacity: 0.7;
+}
+
+/* Responsive design for charts */
+@media (max-width: 768px) {
+    .charts-section .section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chart-controls {
+        justify-content: center;
+    }
+
+    .chart-tab {
+        flex: 1;
+        text-align: center;
+    }
+
+    .chart-wrapper canvas {
+        max-height: 300px;
+    }
+}

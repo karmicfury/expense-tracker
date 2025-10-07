@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 </head>
 
 <body>
@@ -31,6 +32,34 @@
                 <div class="stat-card">
                     <h3>Expenses</h3>
                     <span class="count" id="expenseCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="section-header">
+                <h2>📊 Expense Analytics</h2>
+                <div class="chart-controls">
+                    <button class="chart-tab active" data-chart="category">Categories</button>
+                    <button class="chart-tab" data-chart="trend">Trends</button>
+                    <button class="chart-tab" data-chart="monthly">Monthly</button>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-wrapper active" id="categoryChart">
+                    <h3>Expenses by Category</h3>
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+
+                <div class="chart-wrapper" id="trendChart">
+                    <h3>Spending Trend (Last 30 Days)</h3>
+                    <canvas id="trendLineChart"></canvas>
+                </div>
+
+                <div class="chart-wrapper" id="monthlyChart">
+                    <h3>Monthly Comparison</h3>
+                    <canvas id="monthlyBarChart"></canvas>
                 </div>
             </div>
         </div>

@@ -2,6 +2,8 @@
 class ExpenseTracker {
     constructor() {
         this.expenses = this.loadExpenses();
+        this.charts = {};
+        this.currentChart = 'category';
         this.init();
     }
 
@@ -9,6 +11,7 @@ class ExpenseTracker {
         this.bindEvents();
         this.setDefaultDate();
         this.updateDisplay();
+        this.initCharts();
     }
 
     bindEvents() {
@@ -32,6 +35,22 @@ class ExpenseTracker {
         document.getElementById('exportData').addEventListener('click', () => {
             this.exportToCSV();
         });
+
+        // Chart tab switching
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.switchChart(e.target.dataset.chart);
+            });
+        });
+
+        // Add a manual refresh button for debugging
+        setTimeout(() => {
+            console.log('Checking charts after delay...');
+            if (Object.keys(this.charts).length === 0) {
+                console.log('Charts not initialized, retrying...');
+                this.initCharts();
+            }
+        }, 1000);
     }
 
     setDefaultDate() {
@@ -119,6 +138,7 @@ class ExpenseTracker {
     updateDisplay() {
         this.updateStats();
         this.renderExpenses(this.expenses);
+        this.updateCharts();
     }
 
     updateStats() {
@@ -319,6 +339,369 @@ class ExpenseTracker {
                 }
             }, 300);
         }, 3000);
+    }
+
+    // Chart functionality
+    initCharts() {
+        try {
+            console.log('Initializing charts...');
+
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded!');
+                return;
+            }
+
+            // Check if canvas elements exist
+            const categoryCanvas = document.getElementById('categoryPieChart');
+            const trendCanvas = document.getElementById('trendLineChart');
+            const monthlyCanvas = document.getElementById('monthlyBarChart');
+
+            if (!categoryCanvas || !trendCanvas || !monthlyCanvas) {
+                console.error('Chart canvas elements not found!');
+                return;
+            }
+
+            this.initCategoryChart();
+            this.initTrendChart();
+            this.initMonthlyChart();
+            this.updateCharts();
+            console.log('Charts initialized successfully!');
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
+    }
+
+    initCategoryChart() {
+        try {
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+            this.charts.category = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing category chart:', error);
+        }
+    }
+
+    initTrendChart() {
+        try {
+            const ctx = document.getElementById('trendLineChart').getContext('2d');
+            this.charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Daily Spending',
+                        data: [],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing trend chart:', error);
+        }
+    }
+
+    initMonthlyChart() {
+        try {
+            const ctx = document.getElementById('monthlyBarChart').getContext('2d');
+            this.charts.monthly = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Monthly Spending',
+                        data: [],
+                        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing monthly chart:', error);
+        }
+    }
+
+    updateCharts() {
+        try {
+            console.log('Updating charts with', this.expenses.length, 'expenses');
+            this.updateCategoryChart();
+            this.updateTrendChart();
+            this.updateMonthlyChart();
+        } catch (error) {
+            console.error('Error updating charts:', error);
+        }
+    }
+
+    updateCategoryChart() {
+        try {
+            const categoryData = this.getCategoryData();
+            const chart = this.charts.category;
+
+            console.log('Category data:', categoryData);
+
+            if (!chart) {
+                console.error('Category chart not initialized!');
+                return;
+            }
+
+            if (categoryData.labels.length === 0) {
+                console.log('No category data, showing no data message');
+                this.showNoDataMessage('categoryChart');
+                return;
+            }
+
+            chart.data.labels = categoryData.labels;
+            chart.data.datasets[0].data = categoryData.values;
+            chart.update();
+            console.log('Category chart updated successfully');
+        } catch (error) {
+            console.error('Error updating category chart:', error);
+        }
+    } updateTrendChart() {
+        const trendData = this.getTrendData();
+        const chart = this.charts.trend;
+
+        if (trendData.labels.length === 0) {
+            this.showNoDataMessage('trendChart');
+            return;
+        }
+
+        chart.data.labels = trendData.labels;
+        chart.data.datasets[0].data = trendData.values;
+        chart.update();
+    }
+
+    updateMonthlyChart() {
+        const monthlyData = this.getMonthlyData();
+        const chart = this.charts.monthly;
+
+        if (monthlyData.labels.length === 0) {
+            this.showNoDataMessage('monthlyChart');
+            return;
+        }
+
+        chart.data.labels = monthlyData.labels;
+        chart.data.datasets[0].data = monthlyData.values;
+        chart.update();
+    }
+
+    getCategoryData() {
+        const categoryTotals = {};
+
+        this.expenses.forEach(expense => {
+            const category = this.getCategoryDisplay(expense.category);
+            categoryTotals[category] = (categoryTotals[category] || 0) + expense.amount;
+        });
+
+        const labels = Object.keys(categoryTotals);
+        const values = Object.values(categoryTotals);
+
+        return { labels, values };
+    }
+
+    getTrendData() {
+        const last30Days = [];
+        const dailyTotals = {};
+
+        // Generate last 30 days
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            last30Days.push(dateStr);
+            dailyTotals[dateStr] = 0;
+        }
+
+        // Calculate daily totals
+        this.expenses.forEach(expense => {
+            if (dailyTotals.hasOwnProperty(expense.date)) {
+                dailyTotals[expense.date] += expense.amount;
+            }
+        });
+
+        const labels = last30Days.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+
+        const values = last30Days.map(date => dailyTotals[date]);
+
+        return { labels, values };
+    }
+
+    getMonthlyData() {
+        const monthlyTotals = {};
+        const monthNames = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+
+        // Get last 6 months
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const monthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            months.push({ key: monthKey, label: monthLabel });
+            monthlyTotals[monthKey] = 0;
+        }
+
+        // Calculate monthly totals
+        this.expenses.forEach(expense => {
+            const expenseDate = new Date(expense.date);
+            const monthKey = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}`;
+
+            if (monthlyTotals.hasOwnProperty(monthKey)) {
+                monthlyTotals[monthKey] += expense.amount;
+            }
+        });
+
+        const labels = months.map(month => month.label);
+        const values = months.map(month => monthlyTotals[month.key]);
+
+        return { labels, values };
+    }
+
+    switchChart(chartType) {
+        // Update active tab
+        document.querySelectorAll('.chart-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-chart="${chartType}"]`).classList.add('active');
+
+        // Show selected chart
+        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+            wrapper.classList.remove('active');
+        });
+        document.getElementById(`${chartType}Chart`).classList.add('active');
+
+        this.currentChart = chartType;
+    }
+
+    // Debug method - can be called from browser console
+    debugCharts() {
+        console.log('=== Chart Debug Info ===');
+        console.log('Chart.js available:', typeof Chart !== 'undefined');
+        console.log('Expenses count:', this.expenses.length);
+        console.log('Charts initialized:', Object.keys(this.charts));
+        console.log('Chart elements present:');
+        console.log('- categoryPieChart:', !!document.getElementById('categoryPieChart'));
+        console.log('- trendLineChart:', !!document.getElementById('trendLineChart'));
+        console.log('- monthlyBarChart:', !!document.getElementById('monthlyBarChart'));
+
+        if (this.expenses.length > 0) {
+            console.log('Sample expense:', this.expenses[0]);
+            console.log('Category data:', this.getCategoryData());
+        }
+
+        // Try to force reinitialize
+        console.log('Attempting to reinitialize charts...');
+        this.initCharts();
+    }
+
+    showNoDataMessage(chartId) {
+        const chartWrapper = document.getElementById(chartId);
+        const canvas = chartWrapper.querySelector('canvas');
+
+        if (!chartWrapper.querySelector('.no-chart-data')) {
+            const noDataDiv = document.createElement('div');
+            noDataDiv.className = 'no-chart-data';
+            noDataDiv.innerHTML = `
+                <div class="icon">📊</div>
+                <p>No data available</p>
+                <small>Add some expenses to see your charts</small>
+            `;
+
+            canvas.style.display = 'none';
+            chartWrapper.appendChild(noDataDiv);
+        }
     }
 
     // Utility method to get expense statistics for potential future features
